@@ -1,30 +1,35 @@
+// Connect to the live backend engine
+const socket = io();
+
 document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('send-btn');
     const messageInput = document.getElementById('message-input');
     const chatMessages = document.getElementById('chat-messages');
 
-    // Function to append message to chat UI
-    function appendMessage(text, sender = 'You') {
+    function appendMessage(text, sender = 'User') {
         const messageElement = document.createElement('div');
         messageElement.style.marginBottom = '8px';
         messageElement.innerHTML = `<strong>${sender}:</strong> ${text}`;
         chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Keep view at latest message
     }
 
-    // Event listener for sending messages
+    // Capture and send message to the network
     sendBtn.addEventListener('click', () => {
         const messageText = messageInput.value.trim();
         if (messageText !== '') {
-            appendMessage(messageText);
-            messageInput.value = ''; // Clear input field
+            // Push message to socket network
+            socket.emit('chat message', messageText);
+            messageInput.value = '';
         }
     });
 
-    // Allow pressing 'Enter' key to send
     messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendBtn.click();
-        }
+        if (e.key === 'Enter') { sendBtn.click(); }
+    });
+
+    // Handle incoming messages sent by other users
+    socket.on('chat message', (msg) => {
+        appendMessage(msg, 'Network Peer');
     });
 });
